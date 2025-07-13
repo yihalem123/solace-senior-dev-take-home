@@ -112,8 +112,9 @@ resource "aws_kms_key" "decrypt_key" {
   }
 }
 
-# Create KMS alias
+# Create KMS alias (only if it doesn't exist)
 resource "aws_kms_alias" "decrypt_key" {
+  count         = var.create_kms_alias ? 1 : 0
   name          = "alias/solace/decrypt"
   target_key_id = aws_kms_key.decrypt_key.key_id
 }
@@ -224,13 +225,4 @@ resource "aws_lambda_function" "decrypt_function" {
 resource "aws_lambda_function_url" "decrypt_function_url" {
   function_name      = aws_lambda_function.decrypt_function.function_name
   authorization_type = "NONE"
-
-  cors {
-    allow_credentials = true
-    allow_origins     = ["*"]
-    allow_methods     = ["POST", "OPTIONS"]
-    allow_headers     = ["*"]
-    expose_headers    = ["*"]
-    max_age          = 86400
-  }
 } 

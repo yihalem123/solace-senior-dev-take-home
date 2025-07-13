@@ -1,4 +1,4 @@
-# Deployment Guide
+# Deployment Guide - Task A: Secure Decryption Service
 
 This guide provides step-by-step instructions for deploying and testing the Solace Senior Dev Take Home project.
 
@@ -71,17 +71,17 @@ S3_BUCKET=$(terraform output -raw s3_bucket_name)
 KMS_KEY_ID=$(terraform output -raw kms_key_id)
 
 # Create test data
-echo "Hello, World! This is a test message." > test_message.txt
+echo "Hello, World! This is a test message." > test_messages.txt
 
-# Encrypt the data using KMS
+# Encrypt the data using KMS (save as base64-encoded)
 aws kms encrypt \
   --key-id $KMS_KEY_ID \
-  --plaintext fileb://test_message.txt \
+  --plaintext fileb://test_messages.txt \
   --output text \
-  --query CiphertextBlob | base64 -d > encrypted_data.bin
+  --query CiphertextBlob > simple_encrypted_base64.txt
 
 # Upload to S3
-aws s3 cp encrypted_data.bin s3://$S3_BUCKET/test-blob
+aws s3 cp simple_encrypted_base64.txt s3://$S3_BUCKET/simple_encrypted_base64.txt
 ```
 
 ### 6. Test the Lambda Function
@@ -91,7 +91,7 @@ aws s3 cp encrypted_data.bin s3://$S3_BUCKET/test-blob
 LAMBDA_URL=$(terraform output -raw lambda_function_url)
 
 # Test the function
-../decrypt_test.sh $LAMBDA_URL test-blob
+../decrypt_test.sh "$LAMBDA_URL" "simple_encrypted_base64.txt"
 ```
 
 ## 🔧 Advanced Configuration
@@ -128,7 +128,7 @@ terraform apply \
 
 ```bash
 # Test with valid data
-../decrypt_test.sh $LAMBDA_URL test-blob
+../decrypt_test.sh "$LAMBDA_URL" "simple_encrypted_base64.txt"
 ```
 
 Expected output:
@@ -137,6 +137,8 @@ Expected output:
 Decrypted plaintext:
 Hello, World! This is a test message.
 ```
+
+**Note**: The exact Lambda Function URL will be different for each deployment. Use the URL from your `terraform output lambda_function_url`.
 
 ### 2. Error Handling Test
 
@@ -233,6 +235,11 @@ aws cloudwatch get-metric-statistics \
    - Check KMS key policy
    - Ensure Lambda role has decrypt permissions
 
+5. **"Invalid encrypted data" Error**
+   - Ensure the encrypted data is base64-encoded (AWS CLI format)
+   - Verify the KMS key ID matches the one used for encryption
+   - Check that the file was uploaded correctly to S3
+
 ### Debug Mode
 
 Enable detailed logging in the Lambda function by adding more print statements to `handler.py`.
@@ -269,4 +276,43 @@ For issues or questions:
 1. Check the [README](README.md) for detailed documentation
 2. Review [Troubleshooting](task-A/README.md#troubleshooting) section
 3. Check CloudWatch logs for error details
-4. Verify AWS service limits and quotas 
+4. Verify AWS service limits and quotas
+
+## 🏗️ Architecture Overview
+
+### Components
+- **AWS Lambda Function**: HTTP endpoint for decryption requests
+- **AWS KMS**: Key management service for encryption/decryption
+- **S3 Bucket**: Storage for encrypted blobs
+- **IAM Roles**: Least privilege access policies
+- **CloudWatch Logs**: Function monitoring and debugging
+
+### Security Features
+- KMS key with rotation enabled (`alias/solace/decrypt`)
+- S3 bucket with encryption at rest
+- IAM roles with minimal required permissions
+- CORS headers for web application integration
+
+### API Reference
+
+**Endpoint**: `POST https://<lambda-function-url>/`
+
+**Request Format**:
+```json
+{
+  "blobKey": "s3-object-key"
+}
+```
+
+**Response Format**:
+```json
+{
+  "plaintext": "decrypted-content"
+}
+```
+
+**Error Responses**:
+- `400`: Invalid request or encrypted data
+- `404`: Blob not found in S3
+- `403`: Access denied to KMS key
+- `500`: Internal server error 

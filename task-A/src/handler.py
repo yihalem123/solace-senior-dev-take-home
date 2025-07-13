@@ -73,6 +73,18 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         try:
             response = s3_client.get_object(Bucket=s3_bucket, Key=blob_key)
             encrypted_blob = response['Body'].read()
+            print(f"Downloaded encrypted blob size: {len(encrypted_blob)} bytes")
+            
+            # Try to decode as base64 first (since AWS CLI outputs base64-encoded data)
+            try:
+                # Decode base64 to get raw binary data for KMS
+                encrypted_blob = base64.b64decode(encrypted_blob)
+                print(f"Successfully decoded base64, binary size: {len(encrypted_blob)} bytes")
+            except Exception as e:
+                print(f"Failed to decode as base64, treating as raw binary: {str(e)}")
+                # If base64 decode fails, assume it's already raw binary
+                pass
+                
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == 'NoSuchKey':
@@ -92,11 +104,21 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         # Decrypt the blob using KMS
         try:
+            print(f"Attempting to decrypt blob with KMS key: {kms_key_id}")
             decrypt_response = kms_client.decrypt(
                 CiphertextBlob=encrypted_blob,
                 KeyId=kms_key_id
             )
+            print(f"Decryption successful, plaintext length: {len(decrypt_response['Plaintext'])} bytes")
             plaintext = decrypt_response['Plaintext'].decode('utf-8')
+            print(f"Decoded plaintext: {plaintext}")
+        except UnicodeDecodeError as e:
+            print(f"Unicode decode error: {str(e)}")
+            return {
+                'statusCode': 400,
+                'headers': cors_headers,
+                'body': json.dumps({'error': f'Failed to decode decrypted data: {str(e)}'})
+            }
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == 'InvalidCiphertextException':

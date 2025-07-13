@@ -73,7 +73,20 @@ terraform plan
 terraform apply
 ```
 
-For detailed instructions, see [Task A README](task-A/README.md).
+**Testing:**
+```bash
+# Create test data
+echo "Hello, World! This is a test message." > test_messages.txt
+
+# Encrypt and upload
+aws kms encrypt --key-id $(terraform output -raw kms_key_id) --plaintext fileb://test_messages.txt --output text --query CiphertextBlob > simple_encrypted_base64.txt
+aws s3 cp simple_encrypted_base64.txt s3://$(terraform output -raw s3_bucket_name)/simple_encrypted_base64.txt
+
+# Test the function
+./decrypt_test.sh "$(terraform output -raw lambda_function_url)" "simple_encrypted_base64.txt"
+```
+
+For detailed instructions, see [Task A README](task-A/README.md) and [Deployment Guide](task-A/DEPLOYMENT.md).
 
 ## 🔐 Security Features
 

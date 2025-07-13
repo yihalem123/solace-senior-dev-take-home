@@ -52,6 +52,12 @@ variable "kms_key_deletion_window" {
   default     = 7
 }
 
+variable "create_kms_alias" {
+  description = "Whether to create KMS alias (set to false if alias already exists)"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)

@@ -10,7 +10,7 @@ output "lambda_function_arn" {
 
 output "lambda_function_url" {
   description = "URL of the Lambda function"
-  value       = aws_lambda_function_url.decrypt_function_url.url
+  value       = aws_lambda_function_url.decrypt_function_url.function_url
 }
 
 output "kms_key_id" {
@@ -25,7 +25,7 @@ output "kms_key_arn" {
 
 output "kms_key_alias" {
   description = "Alias of the KMS key"
-  value       = aws_kms_alias.decrypt_key.name
+  value       = var.create_kms_alias ? aws_kms_alias.decrypt_key[0].name : "alias/solace/decrypt-test"
 }
 
 output "s3_bucket_name" {
@@ -71,7 +71,7 @@ output "deployment_instructions" {
     3. Encrypt data using the KMS key:
        aws kms encrypt --key-id ${aws_kms_key.decrypt_key.key_id} --plaintext "Hello, World!" --output text --query CiphertextBlob | base64 -d > encrypted_data.bin
     
-    🔗 Lambda Function URL: ${aws_lambda_function_url.decrypt_function_url.url}
+    🔗 Lambda Function URL: ${aws_lambda_function_url.decrypt_function_url.function_url}
     🔑 KMS Key ID: ${aws_kms_key.decrypt_key.key_id}
     🪣 S3 Bucket: ${var.s3_bucket_name != null ? var.s3_bucket_name : aws_s3_bucket.encrypted_blobs[0].bucket}
   EOT
