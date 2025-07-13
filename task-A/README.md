@@ -2,6 +2,20 @@
 
 A secure enclave-style decryption Lambda service using AWS Lambda, KMS, and S3.
 
+## 🎯 Task Overview
+
+**Goal**: Emulate a Trusted Execution Environment (TEE) using AWS Lambda + KMS for "data in use" security.
+
+**Requirements Met**:
+- ✅ Lambda handler receives `blobKey` via HTTP POST
+- ✅ Fetches encrypted blob from S3 using AWS SDK
+- ✅ Decrypts blob with AWS KMS (Decrypt API)
+- ✅ IAM key policy restricts decryption to Lambda role only
+- ✅ Returns JSON `{ plaintext: string }` over HTTPS with CORS headers
+- ✅ Infrastructure as Code (Terraform) with all required resources
+- ✅ Security best practices (least privilege, encryption at rest)
+- ✅ Comprehensive testing suite and documentation
+
 ## 🏗️ Architecture
 
 ```
@@ -143,8 +157,45 @@ The function includes CORS headers for cross-origin requests:
 
 ## 🧪 Testing
 
-### 1. Create Test Data
+### Quick Test Run
 
+Run all tests with one command:
+```bash
+# From the task-A directory
+./run_tests.sh
+```
+
+### Test Categories
+
+#### 1. Unit Tests
+```bash
+cd tests
+python3 test_lambda.py
+```
+
+**Tests Included:**
+- ✅ CORS preflight requests
+- ✅ Input validation (missing blobKey, invalid JSON)
+- ✅ Successful decryption flow
+- ✅ S3 error handling (blob not found, bucket not found)
+- ✅ KMS error handling (invalid ciphertext, access denied)
+- ✅ Environment variable validation
+- ✅ Integration scenarios
+
+#### 2. Local Function Testing
+```bash
+cd src
+python3 test_local.py
+```
+
+**Tests Included:**
+- ✅ Function logic without AWS dependencies
+- ✅ Error handling scenarios
+- ✅ Response format validation
+
+#### 3. End-to-End Testing
+
+**Create Test Data:**
 ```bash
 # Encrypt some test data
 aws kms encrypt \
@@ -157,14 +208,13 @@ aws kms encrypt \
 aws s3 cp test_data.bin s3://<BUCKET_NAME>/test-blob
 ```
 
-### 2. Test Decryption
-
+**Test Decryption:**
 ```bash
 # Test the Lambda function
 ./decrypt_test.sh <LAMBDA_FUNCTION_URL> test-blob
 ```
 
-Expected output:
+**Expected Output:**
 ```
 [INFO] Testing Lambda decrypt function...
 [INFO] Lambda URL: https://...
@@ -181,6 +231,13 @@ Response Body:
 Decrypted plaintext:
 Hello, World!
 ```
+
+### Test Coverage
+
+- **Unit Tests**: 12 test cases covering all code paths
+- **Integration Tests**: 2 scenarios with mocked AWS services
+- **Error Handling**: Comprehensive error scenario testing
+- **Security**: CORS, input validation, and access control testing
 
 ## 🛠️ Development
 
