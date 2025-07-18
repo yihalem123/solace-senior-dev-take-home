@@ -11,6 +11,8 @@ solace-senior-dev-take-home/
 ├── task-A/   # Enclave-Style Decryption Service (Python, AWS Lambda)
 ├── task-B/   # Cross-Platform Client SDK (TypeScript/JS, encryption, VAD)
 ├── task-C/   # Solace Lite End-to-End Demo (React, Vite, GPT, TTS)
+├── img1.png  # Task B screenshot
+├── img2.png  # Task C screenshot
 ├── README.md # (this file)
 ├── .env.example
 └── ...
@@ -51,6 +53,9 @@ solace-senior-dev-take-home/
   - `task-B/demo/` (React demo app)
   - `task-B/README.md` (API usage, install, demo)
 
+![Task B Demo Screenshot](img1.png)
+*Figure: Task B SDK and demo app in action*
+
 ---
 
 ### **Task C: Solace Lite End-to-End Demo**
@@ -66,6 +71,9 @@ solace-senior-dev-take-home/
 - **Key Files:**
   - `task-C/solace-lite-demo/` (full React+Vite app)
   - `task-C/README.md` (detailed setup, env, usage)
+
+![Task C Demo Screenshot](img2.png)
+*Figure: Task C end-to-end demo UI*
 
 ---
 
