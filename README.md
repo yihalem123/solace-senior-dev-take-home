@@ -1,167 +1,109 @@
-# Solace Senior Developer Take Home
+# Solace Senior Dev Take-Home Assignment
 
-This repository contains the take-home assignment for the Solace Senior Developer position.
+Welcome to the Solace Senior Dev Take-Home! This repository contains three distinct tasks, each demonstrating secure, modern, and cross-platform development skills for a voice-based psychiatric companion system.
 
-## 📁 Project Structure
+---
+
+## Repository Structure
 
 ```
 solace-senior-dev-take-home/
-├── task-A/                    # Secure enclave-style decryption Lambda service
-│   ├── src/
-│   │   ├── handler.py         # Lambda function
-│   │   └── requirements.txt   # Python dependencies
-│   ├── infra/
-│   │   ├── main.tf           # Terraform infrastructure
-│   │   ├── variables.tf      # Terraform variables
-│   │   └── outputs.tf        # Terraform outputs
-│   ├── decrypt_test.sh       # Bash test script
-│   └── README.md             # Task A documentation
-├── env.example               # Environment variables example
-├── .gitignore               # Git ignore rules
-└── README.md                # This file
+├── task-A/   # Enclave-Style Decryption Service (Python, AWS Lambda)
+├── task-B/   # Cross-Platform Client SDK (TypeScript/JS, encryption, VAD)
+├── task-C/   # Solace Lite End-to-End Demo (React, Vite, GPT, TTS)
+├── README.md # (this file)
+├── .env.example
+└── ...
 ```
 
-## 🚀 Quick Start
+---
 
-### Prerequisites
+## Task Overview
 
-- AWS CLI configured with appropriate permissions
-- Terraform >= 1.0
-- Python 3.9+
-- curl (for testing)
-- jq (optional, for better JSON parsing)
+### **Task A: Enclave-Style Decryption Service**
+- **Goal:** Emulate a Trusted Execution Environment (TEE) using AWS Lambda + KMS for secure "data in use" decryption.
+- **Features:**
+  - Lambda handler receives a blobKey (S3 object key) via HTTP POST.
+  - Fetches encrypted blob from S3, decrypts with AWS KMS (Lambda-only IAM policy).
+  - Returns plaintext JSON over HTTPS with CORS.
+  - Infrastructure as Code (Terraform or AWS SAM): Lambda, KMS, S3, API Gateway.
+  - Security best practices: least-privilege IAM, S3 encryption, env vars for config.
+  - End-to-end test script and sample encrypted blob.
+- **Key Files:**
+  - `task-A/src/handler.py` (Lambda handler)
+  - `task-A/infra/` (Terraform/SAM templates)
+  - `task-A/README.md` (setup, deployment, curl example)
 
-### Environment Setup
+---
 
-1. Copy the environment example file:
-```bash
-cp env.example .env
-```
+### **Task B: Cross-Platform Client SDK**
+- **Goal:** Build `@solace/client-sdk` for secure blob encryption and VAD-based audio capture.
+- **Features:**
+  - AES-GCM 256 encryption/decryption (Web Crypto API)
+  - Voice Activity Detection (VAD) using webrtcvad.js or equivalent
+  - Upload/download helpers for Task A endpoint
+  - Minimal React/React Native demo app
+  - Unit tests for encryption, VAD, and API helpers
+- **Key Files:**
+  - `task-B/src/encryption.ts` (crypto helpers)
+  - `task-B/src/vad.ts` (VAD logic)
+  - `task-B/src/api.ts` (upload/download helpers)
+  - `task-B/demo/` (React demo app)
+  - `task-B/README.md` (API usage, install, demo)
 
-2. Edit `.env` with your AWS configuration:
-```bash
-# AWS Configuration
-AWS_REGION=us-east-1
-AWS_PROFILE=default
-```
+---
 
-## 📋 Tasks
+### **Task C: Solace Lite End-to-End Demo**
+- **Goal:** Prototype a minimal voice-to-voice psychiatric companion with chat and voice customization.
+- **Features:**
+  - Voice capture with VAD (auto start/stop)
+  - ASR (OpenAI Whisper primary, EdenAI/Amazon fallback)
+  - GPT-3.5/4 chatbot with psychiatric context
+  - TTS (OpenAI, fallback to AWS Polly), voice selection (male/female)
+  - Modern chat UI: scroll, play buttons, clear history, voice selection
+  - Encrypted memory layer (last 3 conversations, AES-256, localStorage)
+  - Error handling, local SDK integration
+- **Key Files:**
+  - `task-C/solace-lite-demo/` (full React+Vite app)
+  - `task-C/README.md` (detailed setup, env, usage)
 
-### Task A: Secure Enclave-Style Decryption Lambda Service
+---
 
-A secure enclave-style decryption Lambda service using AWS Lambda, KMS, and S3.
+## Prerequisites
+- Node.js (>=16.x)
+- Python (>=3.9) for Task A
+- AWS CLI, Docker, Git, Terraform or AWS SAM CLI (for Task A infra)
+- OpenAI API key (for Task C)
+- (Optional) AWS and EdenAI keys for full demo
 
-**Features:**
-- HTTP POST endpoint for decryption requests
-- S3 blob download and KMS decryption
-- CORS support for cross-origin requests
-- Comprehensive error handling
-- Security best practices (least privilege IAM, encrypted S3, etc.)
+---
 
-**Architecture:**
-- AWS Lambda (Python 3.9, 256MB, 15s timeout)
-- AWS KMS key with alias `alias/solace/decrypt`
-- S3 bucket with AES256 encryption
-- Lambda Function URL for public access
-- CloudWatch logging and monitoring
+## How to Run Each Task
 
-**Quick Start:**
-```bash
-cd task-A/infra
-terraform init
-terraform plan
-terraform apply
-```
+### Task A
+- See `task-A/README.md` for Lambda deployment, infra setup, and test instructions.
 
-**Testing:**
-```bash
-# Create test data
-echo "Hello, World! This is a test message." > test_messages.txt
+### Task B
+- See `task-B/README.md` for SDK usage, API docs, and demo app instructions.
 
-# Encrypt and upload
-aws kms encrypt --key-id $(terraform output -raw kms_key_id) --plaintext fileb://test_messages.txt --output text --query CiphertextBlob > simple_encrypted_base64.txt
-aws s3 cp simple_encrypted_base64.txt s3://$(terraform output -raw s3_bucket_name)/simple_encrypted_base64.txt
+### Task C
+- See `task-C/README.md` for full end-to-end demo setup, environment variables, and usage.
 
-# Test the function
-./decrypt_test.sh "$(terraform output -raw lambda_function_url)" "simple_encrypted_base64.txt"
-```
+---
 
-For detailed instructions, see [Task A README](task-A/README.md) and [Deployment Guide](task-A/DEPLOYMENT.md).
+## Submission Checklist
+- [x] All code, infra, and tests included for each task
+- [x] Each task has a dedicated README with setup and usage
+- [x] No secrets or sensitive data in repo (see `.env.example`)
+- [x] Demo accessible at http://localhost:3000 (Task C)
 
-## 🔐 Security Features
+---
 
-- **IAM Least Privilege**: Lambda role only has necessary permissions
-- **KMS Key Policy**: Restricted access to Lambda role only
-- **S3 Encryption**: AES256 server-side encryption
-- **Public Access Blocked**: S3 bucket blocks all public access
-- **Key Rotation**: KMS key rotation enabled
-- **No Hardcoded Secrets**: All secrets managed via environment variables
+## Contact & Support
+**Yihalem Mandefro**  
+📧 Email: [yihalemmande123@gmail.com](mailto:yihalemmande123@gmail.com)  
+🔗 LinkedIn: [linkedin.com/in/yihalemm](https://linkedin.com/in/yihalemm)
 
-## 🧪 Testing
+For any questions, please refer to the individual task READMEs or contact me directly.
 
-Each task includes comprehensive testing:
-
-- **Task A**: Bash script for testing Lambda function
-- **Unit Tests**: Python unit tests for Lambda functions
-- **Integration Tests**: End-to-end testing with real AWS services
-
-## 📊 Monitoring
-
-- CloudWatch Logs for Lambda functions
-- CloudWatch Metrics for performance monitoring
-- Terraform outputs for resource information
-
-## 🛠️ Development
-
-### Local Development
-
-1. Install Python dependencies:
-```bash
-cd task-A/src
-pip install -r requirements.txt
-```
-
-2. Set up AWS credentials:
-```bash
-aws configure
-```
-
-3. Test locally (requires AWS credentials):
-```bash
-python handler.py
-```
-
-### Infrastructure as Code
-
-All infrastructure is defined using Terraform:
-
-- **Modular Design**: Reusable Terraform modules
-- **Environment Variables**: Configurable via variables
-- **State Management**: Remote state storage (recommended)
-- **Security**: Least privilege IAM policies
-
-## 🧹 Cleanup
-
-To destroy all resources:
-
-```bash
-cd task-A/infra
-terraform destroy
-```
-
-**⚠️ Warning:** This will delete all resources including KMS keys and S3 buckets!
-
-## 📝 Documentation
-
-- [Task A Documentation](task-A/README.md) - Detailed setup and usage
-- [API Reference](task-A/README.md#api-reference) - HTTP API documentation
-- [Security Guide](task-A/README.md#security-features) - Security implementation details
-- [Troubleshooting](task-A/README.md#troubleshooting) - Common issues and solutions
-
-## 🤝 Contributing
-
-This is a take-home assignment. Please follow the provided requirements and security guidelines.
-
-## 📄 License
-
-This project is part of the Solace Senior Developer take-home assignment. 
+ 
